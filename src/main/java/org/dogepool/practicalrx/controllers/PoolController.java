@@ -73,9 +73,9 @@ public class PoolController {
 
     @RequestMapping("/lastblock")
     public Map<String, Object> lastBlock() {
-        LocalDateTime found = statService.lastBlockFoundDate();
+        LocalDateTime found = statService.lastBlockFoundDate().toBlocking().single();
         Duration foundAgo = Duration.between(found, LocalDateTime.now());
-        User foundBy = statService.lastBlockFoundBy();
+        User foundBy = statService.lastBlockFoundBy().toBlocking().single();
 
         Map<String, Object> json = new HashMap<>(2);
         json.put("foundOn", found.format(DateTimeFormatter.ISO_DATE_TIME));

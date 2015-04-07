@@ -38,14 +38,22 @@ public class StatService {
                           });
     }
 
-    public LocalDateTime lastBlockFoundDate() {
+    public Observable<LocalDateTime> lastBlockFoundDate() {
         Random rng = new Random(System.currentTimeMillis());
-        return LocalDateTime.now().minus(rng.nextInt(72), ChronoUnit.HOURS);
+        LocalDateTime date = LocalDateTime.now().minus(rng.nextInt(72), ChronoUnit.HOURS);
+        return Observable.just(date);
     }
 
-    public User lastBlockFoundBy() {
-        Random rng = new Random(System.currentTimeMillis());
-        List<User> allUsers = userService.findAll().toList().toBlocking().first();
-        return allUsers.get(rng.nextInt(allUsers.size()));
+    public Observable<User> lastBlockFoundBy() {
+        final Random rng = new Random(System.currentTimeMillis());
+        return Observable.<Integer>create(s -> {
+            s.onNext(rng.nextInt(10));
+            s.onCompleted();
+        })
+                         .doOnNext(i -> System.out.println(i))
+                         .flatMap(i -> userService.findAll().skip(i))
+                         .last()
+                         .retry(4)
+                         .onErrorReturn(t -> new User(-1L, "Default", "Banned User", "default", "0"));
     }
 }
