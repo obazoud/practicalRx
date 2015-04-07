@@ -42,7 +42,8 @@ public class PoolService {
                     connectedUsers.add(user);
                     s.onNext(Boolean.TRUE);
                     s.onCompleted();
-                });
+                })
+                .doOnNext(v -> System.out.println("Connected users (+1): " + connectedUsers));
     }
 
     public Observable<Boolean> disconnectUser(User user) {
@@ -51,6 +52,7 @@ public class PoolService {
                     connectedUsers.remove(user);
                     s.onNext(Boolean.TRUE);
                     s.onCompleted();
-                });
+                })
+                .doOnNext(v -> System.out.println("Connected users (-1): " + connectedUsers));
     }
 }
