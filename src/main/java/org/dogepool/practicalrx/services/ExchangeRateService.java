@@ -24,12 +24,25 @@ public class ExchangeRateService {
     @Value("${exchange.free.api.baseUrl}")
     private String exchangeUrl;
 
+    @Value("${exchange.nonfree.api.baseUrl}")
+    private String exchangeNonfreeUrl;
+
+    @Autowired
+    private AdminService adminService;
+
     @Autowired
     private RestTemplate restTemplate;
 
     public Observable<Double> dogeToCurrencyExchangeRate(String targetCurrencyCode) {
+        Observable<Double> dollarToCurrency =
+                dollarToCurrency(targetCurrencyCode)
+                        .doOnError(e -> System.out.println("FALLING BACK TO NON-FREE EXCHANGE RATE SERVICE"))
+                        .onErrorResumeNext(t -> (t instanceof DogePoolException)
+                                ? dollarToCurrencyNonFree(targetCurrencyCode)
+                                : Observable.error(t));
+
         return dogeToDollar()
-                .zipWith(dollarToCurrency(targetCurrencyCode), (doge2usd, usd2currency) -> doge2usd * usd2currency);
+                .zipWith(dollarToCurrency, (doge2usd, usd2currency) -> doge2usd * usd2currency);
     }
 
     private Observable<Double> dogeToDollar() {
@@ -66,5 +79,29 @@ public class ExchangeRateService {
                         Error.UNREACHABLE_SERVICE, HttpStatus.REQUEST_TIMEOUT));
             }
         });
+    }
+
+    private Observable<Double> dollarToCurrencyNonFree(String currencyCode) {
+        return Observable.<Double>create(sub -> {
+            try {
+                Map result = restTemplate.getForObject(exchangeNonfreeUrl + "/{from}/{to}", Map.class,
+                        "USD", currencyCode);
+                Double rate = (Double) result.get("exchangeRate");
+                if (rate == null)
+                    rate = (Double) result.get("rate");
+
+                if (rate == null) {
+                    sub.onError(new DogePoolException("Malformed exchange rate from non-free service",
+                            Error.BAD_CURRENCY, HttpStatus.UNPROCESSABLE_ENTITY));
+                }
+                sub.onNext(rate);
+                sub.onCompleted();
+            } catch (RestClientException e) {
+                sub.onError(new DogePoolException("Unable to reach non-free currency exchange service at " + exchangeUrl,
+                        Error.UNREACHABLE_SERVICE, HttpStatus.REQUEST_TIMEOUT));
+            }
+        })
+        .doOnNext(r -> adminService.addCost(1))
+        .doOnCompleted(() -> System.out.println("CALLED NON-FREE EXCHANGE RATE SERVICE FOR 1$"));
     }
 }
