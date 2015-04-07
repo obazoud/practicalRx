@@ -41,7 +41,7 @@ public class Main {
 
             System.out.println("Welcome to " + poolService.poolName() + " dogecoin mining pool!");
             System.out.println(poolService.miningUsers().count().toBlocking().first() + " users currently mining, for a global hashrate of "
-                    + poolService.poolGigaHashrate() + " GHash/s");
+                    + poolService.poolGigaHashrate().toBlocking().first() + " GHash/s");
 
             try {
                 System.out.println("1 DOGE = " + exchangeRateService.dogeToCurrencyExchangeRate("USD") + "$");

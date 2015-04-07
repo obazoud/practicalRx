@@ -30,13 +30,10 @@ public class PoolService {
         return Observable.from(connectedUsers);
     }
 
-    public double poolGigaHashrate() {
-        double hashrate = 0d;
-        for (User u : miningUsers().toList().toBlocking().first()) {
-            double userRate = hashrateService.hashrateFor(u).toBlocking().first();
-            hashrate += userRate;
-        }
-        return hashrate;
+    public Observable<Double> poolGigaHashrate() {
+        return miningUsers()
+                .flatMap(u -> hashrateService.hashrateFor(u))
+                .reduce(0d, (pools, users) -> pools + users);
     }
 
     public Observable<Boolean> connectUser(User user) {
