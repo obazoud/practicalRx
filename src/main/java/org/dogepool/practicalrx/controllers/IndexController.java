@@ -33,7 +33,7 @@ public class IndexController {
         idxModel.setHashLadder(rankService.getLadderByHashrate());
         idxModel.setCoinsLadder(rankService.getLadderByCoins());
         idxModel.setPoolName(poolService.poolName());
-        idxModel.setMiningUserCount(poolService.miningUsers().size());
+        idxModel.setMiningUserCount(poolService.miningUsers().count().toBlocking().first());
         idxModel.setGigaHashrate(poolService.poolGigaHashrate());
         try {
             idxModel.setDogeToUsdMessage("1 DOGE = " + exchangeRateService.dogeToCurrencyExchangeRate("USD") + "$");

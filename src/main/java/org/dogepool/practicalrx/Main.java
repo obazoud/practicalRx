@@ -33,14 +33,14 @@ public class Main {
 
             User user = userService.getUser(0);
             //connect USER automatically
-            poolService.connectUser(user);
+            poolService.connectUser(user).toBlocking().first();
 
             //display welcome screen in console
             List<UserStat> hashLadder = rankinService.getLadderByHashrate();
             List<UserStat> coinsLadder = rankinService.getLadderByCoins();
 
             System.out.println("Welcome to " + poolService.poolName() + " dogecoin mining pool!");
-            System.out.println(poolService.miningUsers().size() + " users currently mining, for a global hashrate of "
+            System.out.println(poolService.miningUsers().count().toBlocking().first() + " users currently mining, for a global hashrate of "
                     + poolService.poolGigaHashrate() + " GHash/s");
 
             try {

@@ -62,13 +62,13 @@ public class PoolController {
     public Map<String, Object> miners() {
         Map<String, Object> json = new HashMap<>(2);
         json.put("totalUsers", userService.findAll().size());
-        json.put("totalMiningUsers", poolService.miningUsers().size());
+        json.put("totalMiningUsers", poolService.miningUsers().count().toBlocking().first());
         return json;
     }
 
     @RequestMapping("/miners/active")
     public List<User> activeMiners() {
-        return poolService.miningUsers();
+        return poolService.miningUsers().toList().toBlocking().first();
     }
 
     @RequestMapping("/lastblock")

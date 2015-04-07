@@ -56,16 +56,12 @@ public class UserProfileController {
                 String smallAvatarUrl = (String) avatarInfo.get("small");
 
                 //complete with other information
-                double hash = hashrateService.hashrateFor(user);
+                double hash = hashrateService.hashrateFor(user).toBlocking().first();
                 long rankByHash = rankingService.rankByHashrate(user);
                 long rankByCoins = rankingService.rankByCoins(user);
-                coinService.totalCoinsMinedBy(user, new ServiceCallback<Long>() {
-                    @Override
-                    public void onSuccess(Long coins) {
-                        deferred.setResult(new UserProfile(user, hash, coins, avatarUrl, smallAvatarUrl,
+                Long coins = coinService.totalCoinsMinedBy(user).toBlocking().first();
+                deferred.setResult(new UserProfile(user, hash, coins, avatarUrl, smallAvatarUrl,
                                 rankByHash, rankByCoins));
-                    }
-                });
 
                 return deferred;
             } else {
@@ -92,26 +88,21 @@ public class UserProfileController {
                 String smallAvatarUrl = (String) avatarInfo.get("small");
 
                 //complete with other information
-                double hash = hashrateService.hashrateFor(user);
+                double hash = hashrateService.hashrateFor(user).toBlocking().first();
                 long rankByHash = rankingService.rankByHashrate(user);
                 long rankByCoins = rankingService.rankByCoins(user);
-                coinService.totalCoinsMinedBy(user, new ServiceCallback<Long>() {
-                    @Override
-                    public void onSuccess(Long coins) {
-                        UserProfile profile = new UserProfile(user, hash, coins, avatarUrl, smallAvatarUrl, rankByHash, rankByCoins);
-                        User user = profile.user;
-                        MinerModel minerModel = new MinerModel();
-                        minerModel.setAvatarUrl(profile.avatarUrl);
-                        minerModel.setSmallAvatarUrl(profile.smallAvatarUrl);
-                        minerModel.setBio(user.bio);
-                        minerModel.setDisplayName(user.displayName);
-                        minerModel.setNickname(user.nickname);
-                        minerModel.setRankByCoins(profile.rankByCoins);
-                        minerModel.setRankByHash(profile.rankByHash);
-                        model.put("minerModel", minerModel);
-                        stringResponse.setResult("miner");
-                    }
-                });
+                Long coins = coinService.totalCoinsMinedBy(user).toBlocking().first();
+                UserProfile profile = new UserProfile(user, hash, coins, avatarUrl, smallAvatarUrl, rankByHash, rankByCoins);
+                MinerModel minerModel = new MinerModel();
+                minerModel.setAvatarUrl(profile.avatarUrl);
+                minerModel.setSmallAvatarUrl(profile.smallAvatarUrl);
+                minerModel.setBio(user.bio);
+                minerModel.setDisplayName(user.displayName);
+                minerModel.setNickname(user.nickname);
+                minerModel.setRankByCoins(profile.rankByCoins);
+                minerModel.setRankByHash(profile.rankByHash);
+                model.put("minerModel", minerModel);
+                stringResponse.setResult("miner");
 
                 return stringResponse;
             } else {

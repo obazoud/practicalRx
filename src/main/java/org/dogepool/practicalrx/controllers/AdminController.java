@@ -37,8 +37,8 @@ public class AdminController {
     public ResponseEntity<Object> registerMiningUser(@PathVariable("id") long id) {
         User user = userService.getUser(id);
         if (user != null) {
-            poolService.connectUser(user);
-            return new ResponseEntity<>(poolService.miningUsers(), HttpStatus.ACCEPTED);
+            poolService.connectUser(user).toBlocking().first();
+            return new ResponseEntity<>(poolService.miningUsers().toList().toBlocking().first(), HttpStatus.ACCEPTED);
         } else {
             throw new DogePoolException("User cannot mine, not authenticated", Error.BAD_USER, HttpStatus.NOT_FOUND);
         }
@@ -48,8 +48,8 @@ public class AdminController {
     public ResponseEntity<Object> deregisterMiningUser(@PathVariable("id") long id) {
         User user = userService.getUser(id);
         if (user != null) {
-            poolService.disconnectUser(user);
-            return new ResponseEntity<>(poolService.miningUsers(), HttpStatus.ACCEPTED);
+            poolService.disconnectUser(user).toBlocking().first();
+            return new ResponseEntity<>(poolService.miningUsers().toList().toBlocking().first(), HttpStatus.ACCEPTED);
         } else {
             throw new DogePoolException("User is not mining, not authenticated", Error.BAD_USER, HttpStatus.NOT_FOUND);
         }
@@ -71,7 +71,7 @@ public class AdminController {
     protected Map<String, Object> cost(@PathVariable int year, @PathVariable Month month) {
         Map<String, Object> json = new HashMap<>();
         json.put("month", month + " " + year);
-        json.put("cost", adminService.costForMonth(year, month));
+        json.put("cost", adminService.costForMonth(year, month).toBlocking().first());
         json.put("currency", "USD");
         json.put("currencySign", "$");
         return json;
