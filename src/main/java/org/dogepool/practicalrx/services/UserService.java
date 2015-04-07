@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import rx.Observable;
 
 /**
  * Service to get user information.
@@ -32,27 +33,19 @@ public class UserService {
     @Value("${store.enableFindAll:false}")
     private boolean useCouchbaseForFindAll;
 
-    public User getUser(long id) {
-        for (User user : findAll()) {
-            if (user.id == id) {
-                return user;
-            }
-        }
-
-        return null; //TODO any better way of doing this in Java 8?
+    public Observable<User> getUser(long id) {
+        return findAll()
+                .filter(u -> u.id == id)
+                .take(1);
     }
 
-    public User getUserByLogin(String login) {
-        for (User user : findAll()) {
-            if (login.equals(user.nickname)) {
-                return user;
-            }
-        }
-
-        return null; //TODO any better way of doing this in Java 8?
+    public Observable<User> getUserByLogin(String login) {
+        return findAll()
+                .filter(u -> login.equals(u.nickname))
+                .take(1);
     }
 
-    public List<User> findAll() {
+    public Observable<User> findAll() {
         if (useCouchbaseForFindAll) {
             try {
                 Statement statement = Select.select("avatarId", "bio", "displayName", "id", "nickname").from(x("default"))
@@ -62,13 +55,13 @@ public class UserService {
                 for (QueryRow qr : queryResult) {
                     users.add(User.fromJsonObject(qr.value()));
                 }
-                return users;
+                return Observable.from(users);
             } catch (Exception e) {
-                throw new DogePoolException("Error while getting list of users from database",
-                        Error.DATABASE, HttpStatus.INTERNAL_SERVER_ERROR, e);
+                return Observable.error(new DogePoolException("Error while getting list of users from database",
+                        Error.DATABASE, HttpStatus.INTERNAL_SERVER_ERROR, e));
             }
         } else {
-            return Arrays.asList(User.USER, User.OTHERUSER);
+            return Observable.just(User.USER, User.OTHERUSER);
         }
     }
 }

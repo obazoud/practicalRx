@@ -35,7 +35,7 @@ public class AdminController {
 
     @RequestMapping(method = RequestMethod.POST, value = "/mining/{id}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> registerMiningUser(@PathVariable("id") long id) {
-        User user = userService.getUser(id);
+        User user = userService.getUser(id).toBlocking().firstOrDefault(null);
         if (user != null) {
             poolService.connectUser(user).toBlocking().first();
             return new ResponseEntity<>(poolService.miningUsers().toList().toBlocking().first(), HttpStatus.ACCEPTED);
@@ -46,7 +46,7 @@ public class AdminController {
 
     @RequestMapping(method = RequestMethod.DELETE, value = "mining/{id}", consumes = MediaType.ALL_VALUE)
     public ResponseEntity<Object> deregisterMiningUser(@PathVariable("id") long id) {
-        User user = userService.getUser(id);
+        User user = userService.getUser(id).toBlocking().firstOrDefault(null);
         if (user != null) {
             poolService.disconnectUser(user).toBlocking().first();
             return new ResponseEntity<>(poolService.miningUsers().toList().toBlocking().first(), HttpStatus.ACCEPTED);

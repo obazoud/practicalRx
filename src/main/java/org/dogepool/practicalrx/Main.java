@@ -31,9 +31,8 @@ public class Main {
             couchbaseBucket.upsert(u1);
             couchbaseBucket.upsert(u2);
 
-            User user = userService.getUser(0);
             //connect USER automatically
-            poolService.connectUser(user).toBlocking().first();
+            userService.getUser(0).flatMap(u -> poolService.connectUser(u)).toBlocking().first();
 
             //display welcome screen in console
             List<UserStat> hashLadder = rankinService.getLadderByHashrate();
