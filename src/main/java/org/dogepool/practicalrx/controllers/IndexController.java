@@ -32,18 +32,13 @@ public class IndexController {
     public DeferredResult<ModelAndView> index(Map<String, Object> model) {
         DeferredResult<ModelAndView> deferredResult = new DeferredResult<>();
 
-        Observable<String> doge2usd;
-        try {
-            doge2usd = Observable.just("1 DOGE = " + exchangeRateService.dogeToCurrencyExchangeRate("USD") + "$");
-        } catch (Exception e) {
-            doge2usd = Observable.just("1 DOGE = ??$, couldn't get the exchange rate - " + e.getMessage());
-        }
-        Observable<String> doge2eur;
-        try {
-            doge2eur = Observable.just("1 DOGE = " + exchangeRateService.dogeToCurrencyExchangeRate("EUR") + "€");
-        } catch (Exception e) {
-            doge2eur = Observable.just("1 DOGE = ??€, couldn't get the exchange rate - " + e.getMessage());
-        }
+        //prepare the error catching observable for currency rates
+        Observable<String> doge2usd = exchangeRateService.dogeToCurrencyExchangeRate("USD")
+                                                         .map(rate -> "1 DOGE = " + rate + "$")
+                                                         .onErrorReturn(e -> "1 DOGE = ??$, couldn't get the exchange rate - " + e);
+        Observable<String> doge2eur = exchangeRateService.dogeToCurrencyExchangeRate("EUR")
+                                                         .map(rate -> "1 DOGE = " + rate + "€")
+                                                         .onErrorReturn(e -> "1 DOGE = ??€, couldn't get the exchange rate - " + e);
 
         //prepare a model
         Observable<IndexModel> modelZip = Observable.zip(

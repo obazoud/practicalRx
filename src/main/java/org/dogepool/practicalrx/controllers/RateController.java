@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 
 @RestController
 @RequestMapping(value = "/rate", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -19,11 +20,12 @@ public class RateController {
     private ExchangeRateService service;
 
     @RequestMapping("{moneyTo}")
-    public ExchangeRate rate(@PathVariable String moneyTo) {
-            Double exchange = service.dogeToCurrencyExchangeRate(moneyTo);
-        if (exchange == null) {
-            throw new DogePoolException("Cannot find rate for " + moneyTo, Error.BAD_CURRENCY, HttpStatus.NOT_FOUND);
-        }
-        return new ExchangeRate("DOGE", moneyTo, exchange);
+    public DeferredResult rate(@PathVariable String moneyTo) {
+        DeferredResult<ExchangeRate> result = new DeferredResult<>();
+        service.dogeToCurrencyExchangeRate(moneyTo)
+               .map(rate -> new ExchangeRate("DOGE", moneyTo, rate))
+               .subscribe(exchangeRate -> result.setResult(exchangeRate),
+                       error -> result.setErrorResult(error));
+        return result;
     }
 }
