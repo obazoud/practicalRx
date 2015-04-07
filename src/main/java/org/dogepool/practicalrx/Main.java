@@ -35,8 +35,8 @@ public class Main {
             userService.getUser(0).flatMap(u -> poolService.connectUser(u)).toBlocking().first();
 
             //display welcome screen in console
-            List<UserStat> hashLadder = rankinService.getLadderByHashrate();
-            List<UserStat> coinsLadder = rankinService.getLadderByCoins();
+            List<UserStat> hashLadder = rankinService.getLadderByHashrate().toList().toBlocking().single();
+            List<UserStat> coinsLadder = rankinService.getLadderByCoins().toList().toBlocking().single();
 
             System.out.println("Welcome to " + poolService.poolName() + " dogecoin mining pool!");
             System.out.println(poolService.miningUsers().count().toBlocking().first() + " users currently mining, for a global hashrate of "

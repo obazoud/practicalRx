@@ -30,8 +30,8 @@ public class IndexController {
     public String index(Map<String, Object> model) {
         //prepare a model
         IndexModel idxModel = new IndexModel();
-        idxModel.setHashLadder(rankService.getLadderByHashrate());
-        idxModel.setCoinsLadder(rankService.getLadderByCoins());
+        idxModel.setHashLadder(rankService.getLadderByHashrate().toList().toBlocking().single());
+        idxModel.setCoinsLadder(rankService.getLadderByCoins().toList().toBlocking().single());
         idxModel.setPoolName(poolService.poolName());
         idxModel.setMiningUserCount(poolService.miningUsers().count().toBlocking().first());
         idxModel.setGigaHashrate(poolService.poolGigaHashrate().toBlocking().first());
